@@ -24,7 +24,9 @@ end
 
 ## Usage
 
-TODO
+```
+iex --erl "+sbwt none" -S mix run run.exs
+```
 
 ## Copyright and License
 

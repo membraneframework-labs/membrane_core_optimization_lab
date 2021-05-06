@@ -36,7 +36,11 @@ defmodule Membrane.Template.Mixfile do
 
   defp deps do
     [
-      {:membrane_core, "~> 0.6.0"},
+      # {:membrane_core,
+      #  github: "membraneframework/membrane_core", branch: "links", override: true},
+      {:membrane_core, path: "../membrane_core", override: true},
+      # {:membrane_timescaledb_reporter, github: "membraneframework/membrane_timescaledb_reporter"},
+      # {:eflame, ~r/.*/, path: "../performance/eflame", compile: "rebar compile"},
       {:ex_doc, "~> 0.22", only: :dev, runtime: false},
       {:dialyxir, "~> 1.0.0", only: :dev, runtime: false},
       {:credo, "~> 1.4", only: :dev, runtime: false}
