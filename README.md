@@ -24,9 +24,22 @@ end
 
 ## Usage
 
+via `run.exs`...
 ```
 iex --erl "+sbwt none" -S mix run run.exs
 ```
+...using mix tasks...
+```
+elixir --erl "+sbwt none" -S mix [eprof | fprof] [TIME_TO_RUN_IN_S=10]
+elixir --erl "+sbwt none" -S mix observer
+```
+...or `exprof.sh`/`fprof.sh` like this:
+```
+scripts/exprof.sh [branch1 branch2 ... branchN]
+``` 
+so you can run a profiler against a set of branches (`master` is included by default).
+By default a profiler will run for 10s for each branch. 
+You can override this value by setting $TIME env variable.
 
 ## Copyright and License
 
