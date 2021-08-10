@@ -6,7 +6,7 @@ cgrind () {
     local branch=$1
     local prefix=$2
 
-    echo "Running fprof using membrane_core '$branch' for 10s"
+    echo "Running cgrind using membrane_core '$branch' for 10s"
 
     ( cd ../membrane_core && git checkout $branch ) \
         && MIX_ENV=prod elixir --erl "+sbwt none" -S mix cgrind \
@@ -24,6 +24,6 @@ do
     cgrind $branch $now
 done
 
-rm fprof.* *.fprof
+rm fprof.analysis fprof.trace
 
 ( cd ../membrane_core && git checkout $init_branch )
