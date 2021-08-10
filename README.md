@@ -30,9 +30,9 @@ iex --erl "+sbwt none" -S mix run run.exs
 ```
 ...using mix tasks...
 ```
-elixir --erl "+sbwt none" -S mix [eprof | fprof | cgrind | observer]
+elixir --erl "+sbwt none" -S mix [eprof | eprof_total | fprof | cgrind | observer]
 ```
-...or `eprof.sh`/`fprof.sh`/`cgrind.sh` like this:
+...or `eprof.sh`/`eprof_total.sh`/`fprof.sh`/`cgrind.sh` like this:
 ```
 ./scripts/eprof.sh [branch1 branch2 ... branchN]
 ``` 
