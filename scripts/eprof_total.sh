@@ -9,6 +9,7 @@ eprof_total () {
     echo "Running eprof_total using membrane_core '$branch' for 10s"
 
     ( cd ../membrane_core && git checkout $branch ) \
+        && mix deps.compile membrane_core \
         && MIX_ENV=prod elixir --erl "+sbwt none" -S mix eprof_total \
             | sed -u '/^FUNCTION.*/,$!d' \
             | tee -a ${save_dir}/${prefix}_${branch#"tags/"}.txt
