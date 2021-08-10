@@ -27,7 +27,7 @@ defmodule Membrane.Template.Mixfile do
 
   def application do
     [
-      extra_applications: [:crypto, :observer]
+      extra_applications: [:crypto, :fprof, :observer, :tools]
     ]
   end
 

@@ -30,14 +30,14 @@ iex --erl "+sbwt none" -S mix run run.exs
 ```
 ...using mix tasks...
 ```
-elixir --erl "+sbwt none" -S mix [eprof | fprof]
-elixir --erl "+sbwt none" -S mix observer
+elixir --erl "+sbwt none" -S mix [eprof | fprof | cgrind | observer]
 ```
-...or `eprof.sh`/`fprof.sh` like this:
+...or `eprof.sh`/`fprof.sh`/`cgrind.sh` like this:
 ```
-scripts/eprof.sh [branch1 branch2 ... branchN]
+./scripts/eprof.sh [branch1 branch2 ... branchN]
 ``` 
 so you can run a profiler against a set of branches (tag `v0.7.0` is included by default).
+To open a result of `cgrind` task, you need an external tool, ie. `qcachegrind`.
 
 ## Copyright and License
 
