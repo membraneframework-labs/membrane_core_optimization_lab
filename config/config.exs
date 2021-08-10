@@ -1,8 +1,12 @@
 import Config
 
-# config :membrane_core, :logger, verbose: true
+# config :membrane_core, :logger, level: :critical
 
-config :logger, level: :warn
+config :logger,
+  compile_time_purge_matching: [
+    [application: :membrane_core],
+    [level_lower_than: :error]
+  ]
 
 # config :membrane_timescaledb_reporter, Membrane.Telemetry.TimescaleDB.Repo,
 #   database: "membrane_timescaledb_reporter",
