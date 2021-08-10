@@ -4,25 +4,26 @@ save_dir="profile/fprof"
 
 fprof () {
     local branch=$1
-    local time=$2
-    local prefix=$3
+    local prefix=$2
 
-    echo "Running fprof using membrane_core branch '$branch' for $time s"
+    echo "Running fprof using membrane_core '$branch' for 10s"
 
     ( cd ../membrane_core && git checkout $branch ) \
-        && MIX_ENV=prod elixir --erl "+sbwt none" -S mix fprof $time \
+        && MIX_ENV=prod elixir --erl "+sbwt none" -S mix fprof \
             | sed -u '/^Done\!.*/,$!d' \
-            | tee -a ${save_dir}/${prefix}_${branch}_${time}.txt
+            | tail -n +3 \
+            | tee -a ${save_dir}/${prefix}_${branch#"tags/"}.txt
 }
 
-time=${TIME:-10}
+init_branch=$( cd ../membrane_core && git rev-parse --abbrev-ref HEAD )
+mkdir -p $save_dir
 now=$(date +"%d%m_%H%M%S")
 
-mkdir -p $save_dir
-
-fprof "master" $time $now
+fprof "tags/v0.7.0" $now
 
 for branch in "$@"
 do
-    fprof $branch $time $now
+    fprof $branch $now
 done
+
+( cd ../membrane_core && git checkout $init_branch )

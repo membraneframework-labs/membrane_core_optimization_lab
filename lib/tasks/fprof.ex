@@ -1,20 +1,24 @@
 defmodule Mix.Tasks.Fprof do
   use Mix.Task
 
-  @impl Mix.Task
-  def run(opts) do
-    time = parse_opts(opts)
+  defmacro profile(do: block) do
+    content =
+      quote do
+        Mix.Tasks.Profile.Fprof.profile(
+          fn -> unquote(block) end,
+          warmup: false,
+          callers: true,
+          sort: :acc
+        )
+      end
 
-    Mix.Tasks.Profile.Fprof.profile(fn ->
-      OptimizationLab.Pipeline.run()
-      Process.sleep(time)
-    end)
+    Code.compile_quoted(content)
   end
 
-  defp parse_opts(opts) do
-    case opts do
-      [time | _] -> String.to_integer(time) * 1_000
-      _ -> 10_000
+  @impl Mix.Task
+  def run(_) do
+    profile do
+      OptimizationLab.Pipeline.run_for(10_000)
     end
   end
 end
