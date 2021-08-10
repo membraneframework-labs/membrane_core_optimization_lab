@@ -11,6 +11,13 @@ defmodule OptimizationLab.Pipeline do
     play(pid)
   end
 
+  def run_for(n_ms) do
+    {:ok, pid} = start_link()
+    play(pid)
+    Process.sleep(n_ms)
+    Process.exit(pid, :normal)
+  end
+
   @impl true
   def handle_init(_) do
     links = [
