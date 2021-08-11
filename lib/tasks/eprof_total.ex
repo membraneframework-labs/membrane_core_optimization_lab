@@ -7,6 +7,6 @@ defmodule Mix.Tasks.EprofTotal do
     :eprof.start_profiling(:erlang.processes() -- [p])
     OptimizationLab.Pipeline.run_for(10_000)
     :eprof.stop_profiling()
-    :eprof.analyze(:total)
+    :eprof.analyze(:total, sort: :time)
   end
 end
