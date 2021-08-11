@@ -7,7 +7,7 @@ defmodule Mix.Tasks.Fprof do
       fn -> OptimizationLab.Pipeline.run_for(10_000) end,
       warmup: false,
       callers: true,
-      sort: :acc
+      sort: :own
     )
   end
 end
