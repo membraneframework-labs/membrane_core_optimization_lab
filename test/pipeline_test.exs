@@ -44,7 +44,6 @@ defmodule Membrane.OptimizationLab.PipelineTest do
     def handle_notification(_notification, _child, _ctx, state) do
       {:ok, state}
     end
-
   end
 
   test "run pipeline" do
