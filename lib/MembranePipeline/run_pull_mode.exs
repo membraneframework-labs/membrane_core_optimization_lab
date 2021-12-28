@@ -7,7 +7,7 @@ defmodule MembranePipeline.Sink do
 
   @impl true
   def handle_init(_opts) do
-    {:ok, %{message_count: 0, measurement_count: 0, avg: 0}}
+    {:ok, %{message_count: 0}}
   end
 
   @impl true
@@ -18,25 +18,16 @@ defmodule MembranePipeline.Sink do
   @impl true
   def handle_write(:input, _buffer, _context, state) do
     if state.message_count == 0 do
-      Process.send_after(self(), :tick, 1000)
+      Process.send_after(self(), :tick, 20_000)
     end
 
-    {{:ok, demand: :input}, %{state | message_count: state.message_count + 1}}
+    {{:ok, demand: :input}, Map.update!(state, :message_count, &(&1 + 1))}
   end
 
   @impl true
   def handle_other(:tick, _ctx, state) do
-    state = %{
-      state
-      | message_count: 0,
-        measurement_count: state.measurement_count + 1,
-        avg:
-          (state.measurement_count * state.avg + state.message_count) /
-            (state.measurement_count + 1)
-    }
-
-    IO.inspect(state.avg)
-    {:ok, state}
+    IO.inspect(state.message_count / 20)
+    {:ok, %{message_count: 0}}
   end
 end
 
