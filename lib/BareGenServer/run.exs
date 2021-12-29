@@ -27,20 +27,25 @@ defmodule BareGenServer.Sink do
 
   @impl true
   def init(_init) do
-    {:ok, %{message_count: 0}}
+    {:ok, %{message_count: 0, start_time: 0}}
   end
 
   @impl true
   def handle_info(:tick, state) do
-    IO.inspect(state.message_count / 20)
-    {:noreply, %{message_count: 0}}
+    elapsed = (Membrane.Time.monotonic_time() - state.start_time) / Membrane.Time.second()
+    IO.inspect("Elapsed: #{elapsed} [s] Messages: #{state.message_count / elapsed} [M/s]")
+    {:noreply, %{state | message_count: 0}}
   end
 
   @impl true
-  def handle_cast(message, state) do
-    if state.message_count == 0 do
-      Process.send_after(self(), :tick, 20_000)
-    end
+  def handle_cast(_message, state) do
+    state =
+      if state.message_count == 0 do
+        Process.send_after(self(), :tick, 20_000)
+        %{state | start_time: Membrane.Time.monotonic_time()}
+      else
+        state
+      end
 
     {:noreply, Map.update!(state, :message_count, &(&1 + 1))}
   end
@@ -85,7 +90,8 @@ defmodule BareGenServer.Source do
   end
 end
 
-n = 5
+# number of elements in the pipeline
+n = 4
 
 {:ok, sink} = BareGenServer.Sink.start_link()
 

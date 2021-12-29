@@ -7,22 +7,27 @@ defmodule MembranePipeline.Sink do
 
   @impl true
   def handle_init(_opts) do
-    {:ok, %{message_count: 0}}
+    {:ok, %{message_count: 0, start_time: 0}}
   end
 
   @impl true
   def handle_write(:input, _buffer, _context, state) do
-    if state.message_count == 0 do
-      Process.send_after(self(), :tick, 20_000)
-    end
+    state =
+      if state.message_count == 0 do
+        Process.send_after(self(), :tick, 20_000)
+        %{state | start_time: Membrane.Time.monotonic_time()}
+      else
+        state
+      end
 
     {:ok, Map.update!(state, :message_count, &(&1 + 1))}
   end
 
   @impl true
   def handle_other(:tick, _ctx, state) do
-    IO.inspect(state.message_count / 20)
-    {:ok, %{message_count: 0}}
+    elapsed = (Membrane.Time.monotonic_time() - state.start_time) / Membrane.Time.second()
+    IO.inspect("Elapsed: #{elapsed} [s] Messages: #{state.message_count / elapsed} [M/s]")
+    {:ok, %{state | message_count: 0}}
   end
 end
 
@@ -64,13 +69,14 @@ defmodule MembranePipeline.Source do
 
   @impl true
   def handle_prepared_to_playing(_ctx, state) do
-    {{:ok, start_timer: {:timer, 1}}, state}
+    send(self(), :next_buffer)
+    {:ok, state}
   end
 
   @impl true
-  def handle_tick(:timer, _ctx, state) do
-    buffers = [%Buffer{payload: @message}]
-    actions = [buffer: {:output, buffers}]
+  def handle_other(:next_buffer, _ctx, state) do
+    actions = [buffer: {:output, [%Buffer{payload: @message}]}]
+    send(self(), :next_buffer)
     {{:ok, actions}, state}
   end
 end
@@ -80,7 +86,8 @@ require Membrane.RemoteControlled.Pipeline
 alias Membrane.RemoteControlled.Pipeline
 alias Membrane.ParentSpec
 
-n = 30
+# number of elements in the pipeline
+n = 4
 
 children = %{
   source: MembranePipeline.Source,
