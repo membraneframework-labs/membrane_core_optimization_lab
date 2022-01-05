@@ -33,7 +33,11 @@ defmodule BareGenServer.Sink do
   @impl true
   def handle_info(:tick, state) do
     elapsed = (Membrane.Time.monotonic_time() - state.start_time) / Membrane.Time.second()
-    IO.inspect("Elapsed: #{elapsed} [s] Messages: #{state.message_count / elapsed} [M/s]")
+
+    IO.inspect(
+      "Mailbox: #{Process.info(self())[:message_queue_len]} Elapsed: #{elapsed} [s] Throughput: #{state.message_count / elapsed} [kB/s]"
+    )
+
     {:noreply, %{state | message_count: 0}}
   end
 
@@ -41,7 +45,7 @@ defmodule BareGenServer.Sink do
   def handle_cast(_message, state) do
     state =
       if state.message_count == 0 do
-        Process.send_after(self(), :tick, 20_000)
+        Process.send_after(self(), :tick, 10_000)
         %{state | start_time: Membrane.Time.monotonic_time()}
       else
         state
@@ -51,8 +55,34 @@ defmodule BareGenServer.Sink do
   end
 end
 
+# number of elements in the pipeline
+n = 30
+
 defmodule BareGenServer.Source do
   use GenServer
+
+  alias Membrane.Buffer
+
+  @interval 10
+
+  # n <= 4
+  @messages_per_second 1_500_000
+  # n <= 5
+  @messages_per_second 1_200_000
+  # n <= 8
+  @messages_per_second 1_000_000
+  # n <= 9
+  @messages_per_second 800_000
+  # n == 10
+  @messages_per_second 700_000
+  # n == 15
+  @messages_per_second 500_000
+  # n == 20
+  @messages_per_second 400_000
+  # n == 25
+  @messages_per_second 300_000
+  # n == 30
+  @messages_per_second 250_000
 
   @message :crypto.strong_rand_bytes(1000)
 
@@ -62,13 +92,13 @@ defmodule BareGenServer.Source do
 
   @impl true
   def init(send_to) do
-    {:ok, %{send_to: send_to}}
+    messages = (@messages_per_second * @interval / 1000) |> trunc()
+    {:ok, %{send_to: send_to, messages: messages}}
   end
 
   @impl true
   def handle_cast(:start, state) do
-    GenServer.cast(state.send_to, @message)
-    GenServer.cast(self(), :next_message)
+    send(self(), :next_message)
     {:noreply, Map.put(state, :started, true)}
   end
 
@@ -78,20 +108,22 @@ defmodule BareGenServer.Source do
   end
 
   @impl true
-  def handle_cast(:next_message, %{started: true} = state) do
-    GenServer.cast(state.send_to, @message)
-    GenServer.cast(self(), :next_message)
+  def handle_info(:next_message, %{started: true} = state) do
+    Process.send_after(self(), :next_message, @interval)
+
+    1..state.messages
+    |> Enum.each(fn _i ->
+      GenServer.cast(state.send_to, %Buffer{payload: @message})
+    end)
+
     {:noreply, state}
   end
 
   @impl true
-  def handle_cast(:next_message, state) do
+  def handle_info(:next_message, state) do
     {:noreply, state}
   end
 end
-
-# number of elements in the pipeline
-n = 4
 
 {:ok, sink} = BareGenServer.Sink.start_link()
 
